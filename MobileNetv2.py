@@ -8,11 +8,13 @@ from tensorflow.keras.layers.experimental.preprocessing import (RandomFlip,
                                                                 RandomRotation)
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 
+# Define constants
 BATCH_SIZE = 16
 TEST_BATCH_SIZE = 32
 IMG_SIZE = (160, 160)
 directory = "dataset/"
 
+# Load data
 train_dataset = image_dataset_from_directory(directory,
                                              shuffle=True,
                                              batch_size=BATCH_SIZE,
@@ -30,6 +32,7 @@ validation_dataset = image_dataset_from_directory(directory,
 
 class_names = train_dataset.class_names
 
+# Augment data
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
 
@@ -39,6 +42,8 @@ data_augmenter = tf.keras.Sequential(
 preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
 
 IMG_SHAPE = IMG_SIZE + (3,)
+
+# Define model
 
 
 def alpaca_model(IMG_SHAPE=IMG_SHAPE, data_augmentation=data_augmenter):
@@ -57,20 +62,27 @@ def alpaca_model(IMG_SHAPE=IMG_SHAPE, data_augmentation=data_augmenter):
     return model
 
 
+# Create model
 model = alpaca_model()
 
 learning_rate = 0.01
+
+# Compile model
 model.compile(optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
+# Train model
 model.fit(train_dataset, validation_data=validation_dataset,
           epochs=20, verbose=1)
 
+# Save model
 model.save('MobileNetV2.h5')
 
+# Load model
 model = tf.keras.models.load_model('MobileNetV2.h5')
 
+# Evaluate model
 scores = model.evaluate(validation_dataset, verbose=1)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
